@@ -30,7 +30,7 @@ module.exports = (sequelize, DataTypes) => {
   tour_package.init({
     title: DataTypes.STRING,
     sub_title: DataTypes.STRING,
-    description: DataTypes.STRING,
+    description: DataTypes.TEXT,
     price: DataTypes.DOUBLE
   }, {
     sequelize,
