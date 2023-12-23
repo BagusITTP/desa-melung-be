@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   vehicle.init({
-    type: DataTypes.STRING,
+    type: DataTypes.ENUM('Motor', 'Mobil'),
     price: DataTypes.DOUBLE
   }, {
     sequelize,

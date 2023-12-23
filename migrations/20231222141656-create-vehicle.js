@@ -10,7 +10,7 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       type: {
-        type: Sequelize.STRING
+        type: Sequelize.ENUM('Motor', 'Mobil'),
       },
       price: {
         type: Sequelize.DOUBLE
