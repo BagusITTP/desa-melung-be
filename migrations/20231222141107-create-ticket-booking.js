@@ -19,13 +19,16 @@ module.exports = {
         type: Sequelize.DOUBLE
       },
       midtrans_token: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: true
       },
       midtrans_booking_code: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: true
       },
       payment_status: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: true
       },
       user_id: {
         type: Sequelize.INTEGER
