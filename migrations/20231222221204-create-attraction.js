@@ -13,7 +13,7 @@ module.exports = {
         type: Sequelize.DOUBLE
       },
       description: {
-        type: Sequelize.STRING
+        type: Sequelize.TEXT
       },
       createdAt: {
         allowNull: false,

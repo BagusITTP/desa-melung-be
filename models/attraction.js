@@ -16,9 +16,9 @@ module.exports = (sequelize, DataTypes) => {
         as: 'locations'
       })
 
-      this.hasMany(models.facilities_tour, {
+      this.hasMany(models.facilities_attraction, {
         foreignKey: 'attraction_id',
-        as: 'facilities_tours'
+        as: 'facilities_attractions'
       })
 
       this.hasMany(models.attraction_image, {
@@ -29,7 +29,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   attraction.init({
     ticket_price: DataTypes.DOUBLE,
-    description: DataTypes.STRING
+    description: DataTypes.TEXT
   }, {
     sequelize,
     modelName: 'attraction',
