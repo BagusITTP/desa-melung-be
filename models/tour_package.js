@@ -11,6 +11,20 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      this.hasOne(models.tour_booking, {
+        foreignKey: 'tour_package_id',
+        as: 'tour_booking'
+      })
+
+      this.hasMany(models.tour_image, {
+        foreignKey: 'tour_package_id',
+        as: 'tour_images'
+      })
+
+      this.hasMany(models.facilities_tour, {
+        foreignKey: 'tour_package_id',
+        as: 'facilities_tours'
+      })
     }
   }
   tour_package.init({
