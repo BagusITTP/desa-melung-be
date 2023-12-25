@@ -20,18 +20,14 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'tour_package_id',
         as: 'tour_images'
       })
-
-      this.hasMany(models.facilities_tour, {
-        foreignKey: 'tour_package_id',
-        as: 'facilities_tours'
-      })
     }
   }
   tour_package.init({
     title: DataTypes.STRING,
     sub_title: DataTypes.STRING,
     description: DataTypes.TEXT,
-    price: DataTypes.DOUBLE
+    price: DataTypes.DOUBLE,
+    facilities: DataTypes.ARRAY(DataTypes.STRING)
   }, {
     sequelize,
     modelName: 'tour_package',
