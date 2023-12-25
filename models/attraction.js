@@ -11,15 +11,15 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      this.hasMany(models.location, {
-        foreignKey: 'attraction_id',
-        as: 'locations'
-      })
+      // this.hasMany(models.location, {
+      //   foreignKey: 'attraction_id',
+      //   as: 'locations'
+      // })
 
-      this.hasMany(models.facilities_attraction, {
-        foreignKey: 'attraction_id',
-        as: 'facilities_attractions'
-      })
+      // this.hasMany(models.facilities_attraction, {
+      //   foreignKey: 'attraction_id',
+      //   as: 'facilities_attractions'
+      // })
 
       this.hasMany(models.attraction_image, {
         foreignKey: 'attraction_id',
@@ -29,7 +29,9 @@ module.exports = (sequelize, DataTypes) => {
   }
   attraction.init({
     ticket_price: DataTypes.DOUBLE,
-    description: DataTypes.TEXT
+    description: DataTypes.TEXT,
+    facilities: DataTypes.ARRAY(DataTypes.STRING),
+    locations: DataTypes.ARRAY(DataTypes.STRING)
   }, {
     sequelize,
     modelName: 'attraction',

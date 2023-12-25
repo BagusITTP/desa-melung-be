@@ -15,6 +15,12 @@ module.exports = {
       description: {
         type: Sequelize.TEXT
       },
+      facilities: {
+        type: Sequelize.ARRAY(Sequelize.STRING)
+      },
+      locations: {
+        type: Sequelize.ARRAY(Sequelize.STRING)
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
