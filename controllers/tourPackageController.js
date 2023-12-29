@@ -93,16 +93,15 @@ const postTourPackage = async (req, res) => {
 }
 
 const updateTourPackage = async (req, res) => {
-  const id = req.params.id
+  const id = req.params.id;
 
-  const dataId = await tour_package.findOne({ where: { id } })
+  const dataId = await tour_package.findOne({ where: { id } });
 
-  // TODO: Validasi apakah id ada
   if (dataId === null) {
-    res.status(404).json({
+    return res.status(404).json({
       status: 'failed',
       message: `Data tidak ditemukan`
-    })
+    });
   }
 
   const schema = Joi.object({
@@ -111,62 +110,49 @@ const updateTourPackage = async (req, res) => {
     description: Joi.string().required().label("Deskripsi"),
     price: Joi.number().required().label("Harga"),
     facilities: Joi.array().items(Joi.string()).required().label("Fasilitas"),
-  })
+  });
 
-  const val = schema.validate(req.body)
+  const { error, value: datas } = schema.validate(req.body);
 
-  if (!(val.error)) {
-    try {
-      const datas = val.value
-
-      if (req.files) {
-        for (let i = 0; i < req.files.length; i++) {
-          const photo = req.files[i];
-          // get extension file
-          const split = photo.originalname.split('.');
-          const ext = split[split.length - 1];
-
-          // proses upload file ke imagekit
-          const img = await ImageKit.upload({
-            file: photo.buffer, // required
-            fileName: `IMG-${Date.now()}.${ext}`
-          })
-
-          await tour_image.create({
-            name: photo.originalname,
-            fileId: img.fileId,
-            url: img.url,
-            tour_package_id: id
-          })
-        }
-      }
-
-      await tour_package.update({
-        ...datas
-      }, {
-        where: {
-          id
-        }
-      })
-
-      res.status(200).json({
-        status: 'success',
-        message: `Data telah berhasil terupdate`,
-      })
-    } catch (error) {
-      res.status(400).json({
-        status: "failed",
-        message: error.message
-      })
-    }
-  } else {
-    const message = val.error.details[0].message
-    res.status(400).json({
+  if (error) {
+    const message = error.details[0].message;
+    return res.status(400).json({
       status: "failed",
       message
-    })
+    });
   }
-}
+
+  try {
+    if (req.files) {
+      for (const photo of req.files) {
+        const split = photo.originalname.split('.');
+        const ext = split[split.length - 1];
+        const img = await ImageKit.upload({
+          file: photo.buffer,
+          fileName: `IMG-${Date.now()}.${ext}`
+        });
+        await tour_image.create({
+          name: photo.originalname,
+          fileId: img.fileId,
+          url: img.url,
+          tour_package_id: id
+        });
+      }
+    }
+
+    await tour_package.update(datas, { where: { id } });
+
+    res.status(200).json({
+      status: 'success',
+      message: `Data telah berhasil terupdate`,
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: "failed",
+      message: error.message
+    });
+  }
+};
 
 const deleteTourPackage = async (req, res) => {
   try {
