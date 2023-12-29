@@ -36,7 +36,7 @@ const htmlBody = (otp, name) => `
           <table align="center" width="560" border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
 
             <tr>
-              <td style="padding: 20px; background-color: #35CA74;">
+              <td style="padding: 20px; background-color: #258752;">
 
                 <h1 style="margin: 0; font-family: Arial; font-size: 28px; line-height: 32px; color: #ffffff;">
                   Verifikasi Akun Anda
@@ -72,7 +72,7 @@ const htmlBody = (otp, name) => `
             </tr>
 
             <tr>
-              <td style="padding: 20px; font-family: Arial; font-size: 17px; line-height: 22px; background-color: #258D51; color: #ffffff;">
+              <td style="padding: 20px; font-family: Arial; font-size: 17px; line-height: 22px; background-color: #1a5f39; color: #ffffff;">
                 © ${new Date().getFullYear()} Desa Wisata Melung
               </td>
             </tr>
