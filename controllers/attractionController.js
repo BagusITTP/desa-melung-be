@@ -128,14 +128,16 @@ const deleteAttraction = async (req, res) => {
       })
     }
 
-    for (let i = 0; i < dataId.images.length; i++) {
-      const photo = dataId.images[i];
-      await ImageKit.deleteFile(photo.fileId)
-      await attraction_image.destroy({
-        where: {
-          id: photo.id
-        }
-      })
+    if (dataId.attraction_images) {
+      for (let i = 0; i < dataId.attraction_images.length; i++) {
+        const photo = dataId.attraction_images[i];
+        await ImageKit.deleteFile(photo.fileId)
+        await attraction_image.destroy({
+          where: {
+            id: photo.id
+          }
+        })
+      }
     }
 
     await attraction.destroy({

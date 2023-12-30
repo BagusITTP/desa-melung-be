@@ -34,7 +34,7 @@ const getTourPackage = async (req, res) => {
   }
 }
 
-const postTourPackage = async (req, res) => {
+const createTourPackage = async (req, res) => {
   const schema = Joi.object({
     title: Joi.string().required().label("Judul"),
     sub_title: Joi.string().required().label("Sub Judul"),
@@ -75,7 +75,7 @@ const postTourPackage = async (req, res) => {
 
       res.status(201).json({
         status: 'success',
-        message: `Data ${data.title} telah ditambahkan`
+        message: `Paket Wisata telah ditambahkan`
       })
     } catch (error) {
       res.status(400).json({
@@ -144,7 +144,7 @@ const updateTourPackage = async (req, res) => {
 
     res.status(200).json({
       status: 'success',
-      message: `Data telah berhasil terupdate`,
+      message: `Paket Wisata telah berhasil terubah`,
     });
   } catch (error) {
     res.status(400).json({
@@ -170,14 +170,16 @@ const deleteTourPackage = async (req, res) => {
       })
     }
 
-    for (let i = 0; i < dataId.images.length; i++) {
-      const photo = dataId.images[i];
-      await ImageKit.deleteFile(photo.fileId)
-      await tour_image.destroy({
-        where: {
-          id: photo.id
-        }
-      })
+    if (dataId.tour_images) {
+      for (let i = 0; i < dataId.tour_images.length; i++) {
+        const photo = dataId.tour_images[i];
+        await ImageKit.deleteFile(photo.fileId)
+        await tour_image.destroy({
+          where: {
+            id: photo.id
+          }
+        })
+      }
     }
 
     await tour_package.destroy({
@@ -188,7 +190,7 @@ const deleteTourPackage = async (req, res) => {
 
     res.status(200).json({
       status: 'success',
-      message: `Data berhasil dihapus`
+      message: `Paket Wisata berhasil dihapus`
     })
   } catch (err) {
     res.status(400).json({
@@ -200,7 +202,7 @@ const deleteTourPackage = async (req, res) => {
 
 module.exports = {
   getTourPackage,
-  postTourPackage,
+  createTourPackage,
   updateTourPackage,
   deleteTourPackage
 }

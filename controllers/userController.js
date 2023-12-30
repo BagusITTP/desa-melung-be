@@ -232,7 +232,7 @@ const getIdUser = async (req, res) => {
   }
 }
 
-const postUser = async (req, res) => {
+const createUser = async (req, res) => {
   try {
     const schema = Joi.object({
       name: Joi.string().min(2).required().label("Full Name"),
@@ -662,7 +662,7 @@ module.exports = {
   getUsers,
   getUserByUser,
   getIdUser,
-  postUser,
+  createUser,
   updateUser,
   deleteUser,
   login,

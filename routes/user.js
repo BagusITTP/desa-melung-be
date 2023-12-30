@@ -7,7 +7,7 @@ router.get("/search", auth, checkRole(["admin", "user"]), userController.getIdEm
 router.get("/", auth, checkRole(["admin"]), userController.getUsers)
 router.get("/profile", auth, userController.getUserByUser)
 router.get("/:id", auth, checkRole(["admin"]), userController.getIdUser)
-router.post("/register", userController.postUser)
+router.post("/register", userController.createUser)
 router.post("/login", userController.login)
 router.put('/:id', auth, checkRole(["admin"]), userController.updateUser)
 router.delete('/:id', auth, checkRole(["admin"]), userController.deleteUser)
