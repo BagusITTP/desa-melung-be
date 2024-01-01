@@ -55,7 +55,7 @@ const deleteAttractionImage = async (req, res) => {
 
     return res.status(200).json({
       status: 'success',
-      message: `Data dengan nama ${dataId.name} telah di hapus`
+      message: `Data berhasil dihapus`
     })
   } catch (err) {
     res.status(500).json({
