@@ -14,7 +14,7 @@ module.exports = {
     */
     await queryInterface.bulkInsert('attractions', [
       {
-        ticket_price: 7000,
+        ticket_price: 10000,
         description: 'Wisata Pagubugan Desa Melung adalah wahana wisata yang menyenangkan untuk keluarga, dengan nuansa pedesaan yang kental, udara yang sejuk, dan komitmen untuk melestarikan alam serta budaya masyarakat desa.',
         facilities: [
           'Kolam Renang',

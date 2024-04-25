@@ -5,7 +5,7 @@ const checkRole = require('../middleware/checkRole')
 const upload = require('../middleware/uploader')
 
 router.get("/", attractionController.getAttraction)
-router.put("/:id", attractionController.updateAttraction)
+router.put("/:id", auth, checkRole(["admin"]), upload.array('images[]'), attractionController.updateAttraction)
 router.delete("/:id", auth, checkRole(["admin"]), attractionController.deleteAttraction)
 
 module.exports = router

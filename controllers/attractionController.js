@@ -3,17 +3,17 @@ const { attraction, attraction_image, vehicle } = require('../models')
 const ImageKit = require('../lib/imagekit')
 
 const getAttraction = async (req, res) => {
-  data = await attraction.findAll({
-    order: [["id", "Asc"]],
-    include: [
-      {
-        model: attraction_image,
-        as: 'attraction_images'
-      }
-    ]
-  })
-
   try {
+    let data = await attraction.findAll({
+      order: [["id", "Asc"]],
+      include: [
+        {
+          model: attraction_image,
+          as: 'attraction_images'
+        }
+      ]
+    })
+
     if (data.length) {
       return res.status(200).json({
         status: "success",
@@ -25,7 +25,6 @@ const getAttraction = async (req, res) => {
         data: []
       })
     }
-
   } catch (error) {
     return res.status(500).json({
       status: "success",
@@ -35,36 +34,36 @@ const getAttraction = async (req, res) => {
 }
 
 const updateAttraction = async (req, res) => {
-  const id = req.params.id;
-  const dataId = await attraction.findOne({ where: { id } });
-
-  if (dataId === null) {
-    return res.status(404).json({
-      status: 'failed',
-      message: `Data tidak ditemukan`
-    });
-  }
-
-  const schema = Joi.object({
-    motor_price: Joi.number().required().label("Harga motor"),
-    mobil_price: Joi.number().required().label("Harga mobil"),
-    ticket_price: Joi.number().required().label("Harga tiket"),
-    description: Joi.string().required().label("Deskripsi"),
-    facilities: Joi.array().items(Joi.string()).required().label("Fasilitas"),
-    locations: Joi.array().items(Joi.string()).required().label("Lokasi"),
-  });
-
-  const val = schema.validate(req.body);
-
-  if (val.error) {
-    const message = val.error.details[0].message;
-    return res.status(400).json({
-      status: "failed",
-      message
-    });
-  }
-
   try {
+    const id = req.params.id;
+    const dataId = await attraction.findOne({ where: { id } });
+
+    if (dataId === null) {
+      return res.status(404).json({
+        status: 'failed',
+        message: `Data tidak ditemukan`
+      });
+    }
+
+    const schema = Joi.object({
+      motor_price: Joi.number().label("Harga motor"),
+      mobil_price: Joi.number().label("Harga mobil"),
+      ticket_price: Joi.number().label("Harga tiket"),
+      description: Joi.string().label("Deskripsi"),
+      facilities: Joi.array().items(Joi.string()).label("Fasilitas"),
+      locations: Joi.array().items(Joi.string()).label("Lokasi"),
+    });
+
+    const val = schema.validate(req.body);
+
+    if (val.error) {
+      const message = val.error.details[0].message;
+      return res.status(400).json({
+        status: "failed",
+        message
+      });
+    }
+
     const { motor_price, mobil_price, ticket_price, description, facilities, locations } = val.value;
 
     if (req.files) {
