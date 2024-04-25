@@ -33,6 +33,44 @@ const getComment = async (req, res) => {
   }
 }
 
+const getPageComment = async (req, res) => {
+  const article = parseInt(req.params.id)
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+
+  const offset = (page - 1) * limit;
+
+  const { count, rows } = await comment.findAndCountAll({
+    order: [["id", "Desc"]],
+    offset: offset,
+    limit: limit,
+    where: {
+      article_id: article
+    }
+  });
+
+  try {
+    if (rows) {
+      return res.status(200).json({
+        total: count,
+        page: page,
+        data: rows
+      })
+    } else {
+      return res.status(404).json({
+        status: "Data tidak ada",
+        data: []
+      })
+    }
+
+  } catch (error) {
+    return res.status(500).json({
+      status: "success",
+      message: error.message
+    })
+  }
+}
+
 const createComment = async (req, res) => {
   try {
     const schema = Joi.object({
@@ -94,6 +132,7 @@ const deleteComment = async (req, res) => {
 
 module.exports = {
   getComment,
+  getPageComment,
   createComment,
   deleteComment
 }
