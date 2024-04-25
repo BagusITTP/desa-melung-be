@@ -3,7 +3,7 @@ const auth = require('../middleware/auth')
 const contactImageController = require('../controllers/contactImageController')
 const checkRole = require('../middleware/checkRole')
 
-router.get("/", contactImageController.getContactImage)
+router.get("/", auth, checkRole(["admin"]), contactImageController.getContactImage)
 router.delete("/:id", auth, checkRole(["admin"]), contactImageController.deleteContactImage)
 
 module.exports = router
