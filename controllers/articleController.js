@@ -38,6 +38,48 @@ const getArticle = async (req, res) => {
   }
 }
 
+const getPageArticle = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+
+  const offset = (page - 1) * limit;
+
+  const rows = await article.findAll({
+    order: [["id", "Desc"]],
+    include: [
+      {
+        model: article_image,
+        as: 'article_images'
+      }
+    ],
+    offset: offset,
+    limit: limit
+  });
+
+  const count = await article.count()
+
+  try {
+    if (rows) {
+      return res.status(200).json({
+        total: count,
+        page: page,
+        data: rows
+      })
+    } else {
+      return res.status(404).json({
+        status: "Data tidak ada",
+        data: []
+      })
+    }
+
+  } catch (error) {
+    return res.status(500).json({
+      status: "success",
+      message: error.message
+    })
+  }
+}
+
 const createArticle = async (req, res) => {
   const schema = Joi.object({
     title: Joi.string().required().label("Judul"),
@@ -194,6 +236,7 @@ const deleteArticle = async (req, res) => {
 
 module.exports = {
   getArticle,
+  getPageArticle,
   createArticle,
   updateArticle,
   deleteArticle
