@@ -5,6 +5,23 @@ const jwt = require('jsonwebtoken')
 const { user, tour_booking, ticket_booking } = require('../models')
 const nodemailer = require('nodemailer')
 
+// Algoritma XOR untuk enkripsi
+function encrypt(number, key) {
+  return number ^ key;
+}
+
+// Algoritma XOR untuk dekripsi
+function decrypt(number, key) {
+  return number ^ key;
+}
+
+// Membuat kunci acak
+function generateRandomKey() {
+  return Math.floor(Math.random() * 256);
+}
+
+let randomKey = generateRandomKey();
+
 function AddMinutesToDate(date, minutes) {
   return new Date(date.getTime() + minutes * 60000);
 }
@@ -140,28 +157,29 @@ const getUsers = async (req, res) => {
 }
 
 const getUserByUser = async (req, res) => {
+  randomKey = generateRandomKey()
   const data = await user.findAll({
-    include: [
-      {
-        model: tour_booking,
-        as: 'tour_bookings'
-      },
-      {
-        model: ticket_booking,
-        as: 'ticket_bookings'
-      }
-    ],
     where: {
       id: req.user.id
     },
-    attributes: ["name", "email", "phone_number"]
+    attributes: ["id", "name", "email", "phone_number", "role"]
   })
+
+  console.log(encrypt(data[0].id, randomKey))
 
   try {
     if (data.length) {
       return res.status(200).json({
         status: "success",
-        data
+        data: [
+          {
+            id: encrypt(data[0].id, randomKey),
+            name: data[0].name,
+            email: data[0].email,
+            phone_number: data[0].phone_number,
+            role: data[0].role
+          }
+        ]
       })
     } else {
       return res.status(404).json({
@@ -396,7 +414,9 @@ const verifyForgetPassword = async (req, res) => {
 }
 
 const updateUser = async (req, res) => {
-  const id = req.params.id
+  let id = req.params.id
+  id = decrypt(id, randomKey)
+  console.log(id)
 
   const dataId = await user.findByPk(id)
 
@@ -411,10 +431,7 @@ const updateUser = async (req, res) => {
   try {
     const schema = Joi.object({
       name: Joi.string().min(2).required().label("Full Name"),
-      email: Joi.string().email({ minDomainSegments: 2, tlds: { allow: ['com'] } }).required().label("email"),
-      password: Joi.string().pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*\W)(?!.*\s).{8,}$/, "password").required(),
       phone_number: Joi.string().pattern(/^(^\+62\s?|^0)(\d{10,14})$/, "No Telp").required().label("No Telp"),
-      role: Joi.valid("admin", "user")
     })
 
     const { error, value } = schema.validate(req.body)
@@ -427,27 +444,11 @@ const updateUser = async (req, res) => {
       });
     }
 
-    const { email, ...rest } = value
-
-    const Email = await user.findOne({
-      where: {
-        email
-      }
-    })
-
-    // TODO: Validasi apakah email sudah ada
-    if (Email !== null && Email.dataValues.id !== Number(id)) {
-      return res.status(400).json({
-        status: 'failed',
-        message: `Email ${email} sudah ada`
-      })
-    }
-
-    await user.update({ email, ...rest }, { where: { id } })
+    await user.update(value, { where: { id } })
 
     return res.status(200).json({
       status: 'success',
-      message: `Data berhasil diupdate`
+      message: `Perubahan pengaturan akun Anda telah disimpan`
     })
   } catch (err) {
     return res.status(400).json({
@@ -627,6 +628,7 @@ const login = async (req, res) => {
           id: users.id,
           name: users.name,
           email: users.email,
+          phone_number: users.phone_number,
           role: users.role
         }, process.env.JWT_SIGNATURE_KEY);
 
