@@ -36,7 +36,7 @@ module.exports = {
         sub_title: 'Paket Menginap Dirumah Warga Lokal',
         description: 'Sensasi tinggal bersama warga lokal dan mengikuti berbagai kegiatan yang dilakukan pemilik homestay serta berinteraksi dengan warga lainnya + belajar pengolahan produk lokal.',
         price: 25000,
-        facilities: ["Makan snack", "Tiket masuk", "Aula", "Kolam renang", "Sound Sytem", "Asuransi", "Tenda", "Api Unggun", "P3k"],
+        facilities: ["Makan snack", "Tiket masuk", "Aula", "Kolam renang", "Sound Sytem", "Asuransi", "Homestay", "Pemandu", "Api Unggun", "P3k"],
         createdAt: new Date(),
         updatedAt: new Date()
       },
