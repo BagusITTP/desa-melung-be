@@ -10,11 +10,26 @@ const {
 const midtransClient = require('midtrans-client');
 const crypto = require('crypto');
 
-function generateBookingCode() {
-  const codeLength = 6;
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let bookingCode = Array.from(crypto.getRandomValues(new Uint8Array(codeLength))).map((value) => characters[value % characters.length]).join('');
-  return bookingCode;
+function generateOrderId() {
+
+  return new Promise((resolve, reject) => {
+
+    crypto.randomBytes(6, (err, buf) => {
+      if (err) {
+        reject(err);
+      }
+
+      const random = buf.toString('hex').toUpperCase();
+
+      // const date = new Date().getTime().toString().slice(-6);
+
+      const orderId = `T-${random}`;
+
+      resolve(orderId);
+    });
+
+  });
+
 }
 
 let snap = new midtransClient.Snap({
@@ -25,7 +40,7 @@ let snap = new midtransClient.Snap({
 
 const getTicketBooking = async (req, res) => {
   const data = await ticket_booking.findAll({
-    order: [["id", "Asc"]],
+    order: [["id", "DESC"]],
     include: [
       {
         model: vehicle,
@@ -61,19 +76,62 @@ const getTicketBooking = async (req, res) => {
 
 const getByUser = async (req, res) => {
   const data = await ticket_booking.findAll({
-    order: [["id", "Asc"]],
+    order: [["id", "Desc"]],
     include: [
       {
         model: vehicle,
-        as: 'vehicle'
+        as: 'vehicle',
+        attributes: ["price", "type"]
       },
       {
         model: user,
-        as: 'user'
+        as: 'user',
+        attributes: ["name"]
       }
     ],
     where: {
       user_id: req.user.id
+    }
+  })
+
+  try {
+    if (data.length) {
+      return res.status(200).json({
+        status: "success",
+        data
+      })
+    } else {
+      return res.status(404).json({
+        status: "Data tidak ada",
+        data: []
+      })
+    }
+
+  } catch (error) {
+    return res.status(500).json({
+      status: "success",
+      message: error.message
+    })
+  }
+}
+
+const getByOrderId = async (req, res) => {
+  const data = await ticket_booking.findAll({
+    order: [["id", "Asc"]],
+    include: [
+      {
+        model: vehicle,
+        as: 'vehicle',
+        attributes: ["price", "type"]
+      },
+      {
+        model: user,
+        as: 'user',
+        attributes: ["name"]
+      }
+    ],
+    where: {
+      midtrans_booking_code: req.query.order_id
     }
   })
 
@@ -122,7 +180,7 @@ const createTicketBooking = async (req, res) => {
     });
 
     const generateCode = (Math.random() + 1).toString(36).substring(7);
-    const bookingCode = generateBookingCode();
+    const bookingCode = await generateOrderId();
     let dataItems = [];
 
     const [vehicles, attractions] = await Promise.all([
@@ -161,7 +219,119 @@ const createTicketBooking = async (req, res) => {
       "transaction_details": transaction_details,
       "item_details": item_details,
       "customer_details": customer_details,
-      "enabled_payments": ['gopay', 'shopeepay', 'bri_va']
+      "enabled_payments": ['gopay', 'shopeepay', 'bri_va'],
+      "callbacks": {
+        "finish": `${process.env.REDIRECT_URL}/invoice?type=tiket`,
+        "pending": `${process.env.REDIRECT_URL}/tiket-masuk/riwayat`,
+        "cancel": `${process.env.REDIRECT_URL}/tiket-masuk/riwayat`,
+        "error": `${process.env.REDIRECT_URL}/tiket-masuk/riwayat`
+      }
+    };
+
+    const transaction = await snap.createTransaction(midtrans_params);
+
+    let redirectUrl = transaction.redirect_url;
+    const token = transaction.token;
+
+    await ticket_booking.update({
+      midtrans_booking_code: bookingCode,
+      midtrans_token: token
+    }, {
+      where: {
+        id: data.id
+      }
+    });
+
+    return res.status(201).json({
+      status: 'success',
+      message: "Pesanan berhasil dibuat",
+      link: redirectUrl,
+      token
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: "failed",
+      message: error.message
+    });
+  }
+};
+
+const reCreateTicketBooking = async (req, res) => {
+  try {
+    const orderId = req.body.order_id
+
+    const datas = await ticket_booking.findOne({
+      where: {
+        midtrans_booking_code: orderId
+      },
+      attributes: ['amount', 'vehicle_id', 'total_price']
+    })
+
+    if (!datas) {
+      return res.status(404).json({
+        status: 'failed',
+        message: 'Data tidak ditemukan'
+      })
+    }
+
+    const { amount, vehicle_id, total_price } = datas
+
+    const data = await ticket_booking.create({
+      amount,
+      vehicle_id,
+      total_price,
+      user_id: req.user.id
+    });
+
+    await ticket_booking.update({ payment_status: 'cancel', }, { where: { midtrans_booking_code: orderId } });
+
+    const generateCode = (Math.random() + 1).toString(36).substring(7);
+    const bookingCode = `${orderId}-${Date.now()}`;
+    let dataItems = [];
+
+    const [vehicles, attractions] = await Promise.all([
+      vehicle.findByPk(vehicle_id),
+      attraction.findByPk(1)
+    ]);
+
+    dataItems.push({
+      id: generateCode,
+      name: "orang",
+      quantity: amount,
+      price: attractions.ticket_price
+    });
+
+    dataItems.push({
+      id: generateCode,
+      name: vehicles.type,
+      quantity: 1,
+      price: vehicles.price
+    });
+
+    const transaction_details = {
+      "order_id": bookingCode,
+      "gross_amount": total_price
+    };
+
+    const item_details = dataItems;
+
+    const customer_details = {
+      "first_name": req.user.name,
+      "email": req.user.email,
+      "phone": req.user.phone_number
+    };
+
+    const midtrans_params = {
+      "transaction_details": transaction_details,
+      "item_details": item_details,
+      "customer_details": customer_details,
+      "enabled_payments": ['gopay', 'shopeepay', 'bri_va'],
+      "callbacks": {
+        "finish": `${process.env.REDIRECT_URL}/invoice?type=tiket`,
+        "pending": `${process.env.REDIRECT_URL}/tiket-masuk/riwayat`,
+        "cancel": `${process.env.REDIRECT_URL}/tiket-masuk/riwayat`,
+        "error": `${process.env.REDIRECT_URL}/tiket-masuk/riwayat`
+      }
     };
 
     const transaction = await snap.createTransaction(midtrans_params);
@@ -236,7 +406,10 @@ const midtransCallback = async (req, res) => {
             midtrans_booking_code: id
           }
         })
-        return res.render('PaymentSuccess')
+        return res.status(200).json({
+          status: "success",
+          message: "Transaksi berhasil",
+        })
       } else if (fraudStatus == 'accept') {
         // TODO set transaction status on your databaase to 'success'
         await ticket_booking.update({
@@ -246,7 +419,10 @@ const midtransCallback = async (req, res) => {
             midtrans_booking_code: id
           }
         })
-        return res.render('PaymentSuccess')
+        return res.status(200).json({
+          status: "success",
+          message: "Transaksi berhasil",
+        })
       }
     } else if (transactionStatus == 'settlement') {
       // TODO set transaction status on your databaase to 'success'
@@ -257,7 +433,10 @@ const midtransCallback = async (req, res) => {
           midtrans_booking_code: id
         }
       })
-      return res.render('PaymentSuccess')
+      return res.status(200).json({
+        status: "success",
+        message: "Transaksi berhasil",
+      })
     } else if (transactionStatus == 'deny') {
       // TODO you can ignore 'deny', because most of the time it allows payment retries
       // and later can become success
@@ -269,7 +448,8 @@ const midtransCallback = async (req, res) => {
         }
       })
       return res.status(200).json({
-        status: "success"
+        status: "success",
+        message: "Transaksi gagal",
       })
     } else if (transactionStatus == 'cancel' ||
       transactionStatus == 'expire') {
@@ -281,8 +461,9 @@ const midtransCallback = async (req, res) => {
           midtrans_booking_code: id
         }
       })
-      return res.status(200).json({
-        status: "success"
+      return res.status(407).json({
+        status: "success",
+        message: "Transaksi dibatalkan",
       })
     } else if (transactionStatus == 'pending') {
       // TODO set transaction status on your databaase to 'pending' / waiting payment
@@ -293,13 +474,14 @@ const midtransCallback = async (req, res) => {
           midtrans_booking_code: id
         }
       })
-      return res.status(200).json({
-        status: "success"
+      return res.status(400).json({
+        status: "success",
+        message: "Transaksi sedang diproses",
       })
     }
 
   } catch (error) {
-    return res.status(400).json({
+    return res.status(500).json({
       status: "failed",
       message: error.message,
       method: req.method
@@ -338,7 +520,9 @@ const deleteTicketBooking = async (req, res) => {
 module.exports = {
   getTicketBooking,
   getByUser,
+  getByOrderId,
   createTicketBooking,
+  reCreateTicketBooking,
   midtransCallback,
   deleteTicketBooking
 }
