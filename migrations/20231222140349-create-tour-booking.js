@@ -38,6 +38,10 @@ module.exports = {
       tour_package_id: {
         type: Sequelize.INTEGER
       },
+      payment_status: {
+        type: Sequelize.STRING,
+        allowNull: true
+      },
       user_id: {
         type: Sequelize.INTEGER
       },

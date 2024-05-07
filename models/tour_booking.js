@@ -31,6 +31,7 @@ module.exports = (sequelize, DataTypes) => {
     midtrans_token: DataTypes.STRING,
     midtrans_booking_code: DataTypes.STRING,
     tour_package_id: DataTypes.INTEGER,
+    payment_status: DataTypes.STRING,
     user_id: DataTypes.INTEGER
   }, {
     sequelize,
